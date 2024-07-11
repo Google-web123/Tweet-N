@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News App</title>
+    <link rel="stylesheet" href="style.css">
+     
+</head>
+<body>
+    <header>
+       <div class="Top-list">
+         <a href="index.html" class="ar">Tweet-news</a>
+        
+       </div>
+    </header>
+    <main>
+        <div id="refresh-container" class="hidden">
+            <div id="refresh-spinner"></div>
+        </div>
+        <div id="news-container"></div>
+        <div id="error-message">حدث خطأ أثناء جلب الأخبار. المرجو إعادة المحاولة لاحقًا.</div>
+    </main>
+    <script>
+      const apiKey = '2bc583a8130c401f9886b4244d1ba15d';  // استخدام مفتاح API الخاص بك
+const newsContainer = document.getElementById('news-container');
+const errorMessage = document.getElementById('error-message');
+const refreshContainer = document.getElementById('refresh-container');
+
+async function fetchNews() {
+    try {
+        const response = await fetch(`https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        displayNews(data.articles);
+    } catch (error) {
+        console.error('Error fetching the news:', error);
+        showError();
+    }
+}
+
+function displayNews(articles) {
+    newsContainer.innerHTML = '';
+    articles.forEach(article => {
+        const newsItem = document.createElement('div');
+        newsItem.classList.add('news-item');
+        
+        newsItem.innerHTML = `
+            <img src="${article.urlToImage}" alt="News Image">
+            <h2>${article.title}</h2>
+            <p>${article.description}</p>
+            <a href="${article.url}" target="_blank">Read more</a>
+        `;
+        
+        newsContainer.appendChild(newsItem);
+    });
+}
+
+function showError() {
+    errorMessage.style.display = 'block';
+}
+
+function autoRefresh() {
+    setInterval(() => {
+        fetchNews();
+    }, 6000); // تحديث الأخبار كل دقيقة
+}
+
+function setupPullToRefresh() {
+    let startY = 0;
+    let isPulling = false;
+
+    window.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].pageY;
+        isPulling = window.scrollY === 0;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+        const pullDistance = e.touches[0].pageY - startY;
+        if (isPulling && pullDistance > 50) {
+            refreshContainer.classList.remove('hidden');
+        }
+    });
+
+    window.addEventListener('touchend', () => {
+        if (isPulling) {
+            fetchNews().then(() => {
+                setTimeout(() => {
+                    refreshContainer.classList.add('hidden');
+                }, 5000); // اختفاء الدائرة بعد 5 ثوانٍ
+            });
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchNews();
+    autoRefresh();
+    setupPullToRefresh();
+});
+
+    </script>
+</body>
+</html>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    
+    top: 0; /* تثبيتها في أعلى الصفحة */
+    width: 100%; /* جعل العرض يمتد للعرض الكامل للصفحة */
+    background-color: rgba(87, 88, 95, 1); 
+    z-index: 1000; /* تحديد الترتيب التصاعدي لتظل فوق أي شيء آخر */
+    color: white;
+    padding: 1rem 0;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+main {
+    padding: 1rem;
+}
+
+#news-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.news-item {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    width: calc(33% - 1rem);
+}
+
+.news-item img {
+    max-width: 100%;
+    border-radius: 5px;
+}
+
+.news-item h2 {
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+}
+
+.news-item p {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+#error-message {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffdddd;
+    border-top: 2px solid #ff0000;
+    color: #ff0000;
+    text-align: center;
+    padding: 1rem;
+    display: none;
+}
+
+#refresh-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+#refresh-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0C60B2;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .news-item {
+        width: calc(50% - 1rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .news-item {
+        width: 100%;
+    }
+}
+.Top-list{
+  color: #F5F5FF;
+  margin: 0 9px;
+  font-size: 20px;
+  color: #FFFFFF;
+  display: f
+}
+.ar{
+  color: #F5F5FF;
+  margin: 0 44px;
+  text-decoration: none;
+  font-size: 25px;
+}
+</style>
